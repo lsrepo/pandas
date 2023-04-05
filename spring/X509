@@ -1,0 +1,47 @@
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.authentication.preauth.x509.X509PrincipalExtractor;
+import org.springframework.security.web.authentication.preauth.x509.SubjectDnX509PrincipalExtractor;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http
+            .x509()
+                .x509PrincipalExtractor(x509PrincipalExtractor())
+                .userDetailsService(userDetailsService())
+            .and()
+            .authorizeRequests()
+                .anyRequest().authenticated()
+            .and()
+            .httpBasic();
+    }
+
+    @Bean
+    public X509PrincipalExtractor x509PrincipalExtractor() {
+        SubjectDnX509PrincipalExtractor principalExtractor = new SubjectDnX509PrincipalExtractor();
+        principalExtractor.setSubjectDnRegex("CN=(.*?)(?:,|$)");
+        return principalExtractor;
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService() {
+        UserDetails user = User
+                .withUsername("client")
+                .password("")
+                .roles("USER")
+                .build();
+
+        return new InMemoryUserDetailsManager(user);
+    }
+}
