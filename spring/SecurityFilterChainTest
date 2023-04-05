@@ -1,0 +1,46 @@
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.test.context.support.WithSecurityContext;
+import org.springframework.security.web.authentication.preauth.x509.X509AuthenticationToken;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.support.WithUserDetails;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@ExtendWith(SpringExtension.class)
+@WebMvcTest(controllers = MyController.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)
+@Import(CustomSecurityConfig.class)
+public class CustomSecurityConfigTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Test
+    public void testPublicEndpoint() throws Exception {
+        mockMvc.perform(get("/public"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithSecurityContext(factory = X509AuthenticationTokenSecurityContextFactory.class)
+    public void testSecuredEndpointWithX509Authentication() throws Exception {
+        mockMvc.perform(get("/secured").with(x509Authentication()))
+                .andExpect(status().isOk());
+    }
+
+    private RequestPostProcessor x509Authentication() {
+        return request -> {
+            User user = new User("client", "", new SimpleGrantedAuthority("ROLE_USER"));
+            X509AuthenticationToken authentication = new X509AuthenticationToken(user, null, user.getAuthorities());
+            request.setAttribute("authentication", authentication);
+            return request;
+        };
+    }
+}
