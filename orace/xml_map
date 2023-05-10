@@ -1,0 +1,24 @@
+SELECT t1.column1, t1.column2, t2.column3
+FROM table1 t1
+JOIN (
+  SELECT
+    column1,
+    column2,
+    CAST(XMLQUERY('$map/key1/text()'
+                  PASSING map AS "map")
+         AS VARCHAR2(100)) AS key1_value,
+    CAST(XMLQUERY('$map/key2/text()'
+                  PASSING map AS "map")
+         AS VARCHAR2(100)) AS key2_value
+  FROM (
+    SELECT XMLElement("map",
+              XMLForest(
+                column1 AS "key1",
+                column2 AS "key2"
+              )).getClobVal() AS map
+    FROM table2
+    WHERE some_condition
+  )
+) t2
+ON t1.column1 = t2.key1_value
+AND t1.column2 = t2.key2_value;
