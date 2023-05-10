@@ -25,6 +25,8 @@ AND t1.column2 = t2.key2_value;
 
 
 
+
+
 SELECT XMLElement("map",
            XMLForest(
              column1 AS "key1",
@@ -32,5 +34,17 @@ SELECT XMLElement("map",
              column3 AS "key3"
            )
          ).getClobVal() as map
+FROM my_table
+WHERE some_condition;
+
+
+
+SELECT JSON_ARRAYAGG(
+           JSON_OBJECT(
+             'key1' VALUE column1,
+             'key2' VALUE column2,
+             'key3' VALUE column3
+           )
+         ) as json
 FROM my_table
 WHERE some_condition;
