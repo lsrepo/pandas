@@ -48,3 +48,10 @@ SELECT JSON_ARRAYAGG(
          ) as json
 FROM my_table
 WHERE some_condition;
+
+
+
+SELECT t1.id, LISTAGG(t2.value, ', ') WITHIN GROUP (ORDER BY t2.value) AS concatenated_values
+FROM table1 t1
+JOIN table2 t2 ON t1.id = t2.id
+GROUP BY t1.id;
