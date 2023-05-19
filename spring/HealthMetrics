@@ -1,0 +1,18 @@
+@Component
+public class HealthStatusMeterBinder implements MeterBinder {
+
+    private final HealthEndpoint healthEndpoint;
+
+    @Autowired
+    public HealthStatusMeterBinder(HealthEndpoint healthEndpoint) {
+        this.healthEndpoint = healthEndpoint;
+    }
+
+    @Override
+    public void bindTo(MeterRegistry meterRegistry) {
+        meterRegistry.gauge("myapp.health.status", healthEndpoint, ep -> {
+            Status status = ep.health().getStatus();
+            return status.equals(Status.UP) ? 1 : 0;
+        });
+    }
+}
